@@ -26,7 +26,7 @@ function scene:create( event )
     	showScore.text = score
     end
 
-    local scoreEvent = timer.performWithDelay( 250, scoreUp, 0 )
+    local scoreEvent
 
 
 	-- 공룡 움직이기(애니메이션) : 녹색 네모(임시버튼) 클릭하면 점프, 키보드 a 누르면 hurt 애니메이션과 함께 종료 
@@ -49,6 +49,7 @@ function scene:create( event )
 
 	local sepuencesData =
 	{
+		{ name = "stand", start = 1, count = 1},
 		{ name = "run", start = 1, count = 4, time = 400 },
 		{ name = "jump", start = 5, count = 1, loopCount = 1, time = 600},
 		{ name = "hurt", start = 6, count = 1}
@@ -122,6 +123,118 @@ function scene:create( event )
     end
     Runtime:addEventListener( "key", onKeyEvent )
 
+
+    -- 음악
+	local music = audio.loadStream( "Content/music1.ogg" )
+	local bgMusic
+	local soundOn = 0
+	local bgmUI = {}
+	bgmUI[0] = display.newImageRect("Content/on.png", 55, 55)
+	bgmUI[0].x, bgmUI[0].y = 1240, 40
+	bgmUI[0].alpha = 0
+	bgmUI[1] = display.newImageRect("Content/off.png", 55, 55)
+	bgmUI[1].x, bgmUI[1].y = 1240, 40
+
+	local function soundONOFF( ... )
+		if soundOn == 1 then -- 소리 켜져 있으면 끄고
+			soundOn = 0
+			bgmUI[0].alpha = 0
+			bgmUI[1].alpha = 1
+			audio.stop(bgMusic)
+		else -- 꺼져있으면 키고,,
+			soundOn = 1
+			bgmUI[0].alpha = 1
+			bgmUI[1].alpha = 0
+			bgMusic = audio.play(music, { channel=1, loops=-1, fadein=5000 })
+		end
+	end
+	bgmUI[0]:addEventListener("tap", soundONOFF)
+	bgmUI[1]:addEventListener("tap", soundONOFF)
+
+	-- 일시정지
+	local playUI = {}
+	playUI[0] = display.newImageRect("Content/play.png", 55, 55)
+	playUI[0].x, playUI[0].y = 1180, 40
+	playUI[1] = display.newImageRect("Content/stop.png", 55, 55)
+	playUI[1].x, playUI[1].y = 1180, 40
+	playUI[1].alpha = 0
+
+	local UI = {} --일시정지 누르면 뜨는 것들
+	UI[0] = display.newRect(640, 360, 600, 300)
+	UI[0]:setFillColor(0.5)
+	UI[1] = display.newImage("Content/start.png") 
+	UI[1].x, UI[1].y = 640, 400
+	UI[2] = display.newImageRect("Content/x.png", 30, 30)
+	UI[2].x, UI[2].y = 920, 230
+
+	for i = 0, #UI do
+		UI[i].alpha = 0
+	end
+
+	local function tapPlay( ... )
+		-- 시작하는 거 구현 
+		playUI[0].alpha = 0
+		playUI[1].alpha = 1
+
+		--bgm도 같이 켜지기
+		soundOn = 0
+		soundONOFF()
+
+		for i = 0, #UI do
+			UI[i].alpha = 0
+		end
+
+		-- 게임 재개
+		scoreEvent = timer.performWithDelay( 250, scoreUp, 0 )
+		dino:setSequence( "run" )
+	    dino:play()
+	end
+
+	local function tapStop( ... )
+		-- 멈추는 거 구현
+		playUI[0].alpha = 1
+		playUI[1].alpha = 0
+
+		--bgm도 같이 멈추기,,
+		soundOn = 1
+		soundONOFF()
+
+		for i = 0, #UI do
+			UI[i].alpha = 1
+		end
+
+		-- 게임 중단
+		timer.cancel( scoreEvent )
+		dino:setSequence( "stand" )
+	    dino:play()
+	end
+
+	local function tapX( ... )
+		for i = 0, #UI do
+			UI[i].alpha = 0
+		end
+	end
+
+	playUI[0]:addEventListener("tap", tapPlay)
+	playUI[1]:addEventListener("tap", tapStop)
+	UI[1]:addEventListener("tap", tapPlay)
+	UI[2]:addEventListener("tap", tapX)
+
+	-- 죽었을 때 화면 전환 (어디다 추가해야할지 모르겠어서 일단 여기다가 넣음)
+	local function onKeyEvent2( event )
+	    if event.keyName == "s" then
+	    	composer.setVariable("score", score)
+	    	composer.gotoScene("end")
+	    end
+    end
+    Runtime:addEventListener( "key", onKeyEvent2 )
+
+
+    sceneGroup:insert( showScore )
+    sceneGroup:insert( dino )
+    for i = 0, #bgmUI do sceneGroup:insert( bgmUI[i] ) end
+    for i = 0, #playUI do sceneGroup:insert( playUI[i] ) end
+    for i = 0, #UI do sceneGroup:insert( UI[i] ) end
 end
 
 function scene:show( event )

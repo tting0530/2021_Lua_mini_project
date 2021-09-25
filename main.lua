@@ -10,6 +10,6 @@ local widget = require "widget"
 local composer = require "composer"
 
 local function onStart( event )
-	composer.gotoScene( "view1" )
+	composer.gotoScene( "start" )
 end
 onStart()
