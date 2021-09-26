@@ -235,6 +235,42 @@ function scene:create( event )
     for i = 0, #bgmUI do sceneGroup:insert( bgmUI[i] ) end
     for i = 0, #playUI do sceneGroup:insert( playUI[i] ) end
     for i = 0, #UI do sceneGroup:insert( UI[i] ) end
+	
+	--jump&slide
+	local w,h = display.contentWidth, display.contentHeight/2
+	-- 배경
+	local background = display.newImageRect("Content/sky.png", display.contentWidth, display.contentHeight)
+    background.x, background.y = display.contentWidth/2, display.contentHeight/2
+    --임시로 1장짜리 선인장 이미지 사용
+	local player = display.newImageRect("Content/Cactus A.png", 61, 101)
+    player.x, player.y = display.contentWidth/2, display.contentHeight/2
+
+
+    local function playerDown( event )--플레이어 점프 후 원상복귀
+    	transition.to( player, { time=600,  y=(player.y+50)} )
+    end
+
+	local function onKeyJumpEvent( event )--점프키 구현 함수-캐릭터 jump 애니메이션 연결
+	 	if ( event.keyName == "space" ) and ( event.phase == "down" ) and (player.y == h)then
+	 			transition.to( player, { time=600,  y=(player.y-50), onComplete = playerDown } )--플레이어 up
+	 			print("jump")
+	    end
+	end--점프는 슬라이드처럼 시간 조절불가 
+
+
+	local function onKeySlideEvent( event )--슬라이드키 구현 함수
+	 	if ( event.keyName == "down" ) and ( event.phase == "down" ) and (player.y == h)then
+	 			transition.to( player, { time=50, rotation = -90,  y=(player.y+20) } )
+	 			print("slide")--                      ㄴ일단 알아보도록 이미지 회전->나중에 애니메이션 연결
+	    end
+	    if ( event.keyName == "down" ) and ( event.phase ~= "submitted" ) and (player.y == h+20)then
+ 			transition.to( player, { time=300,  y=(player.y-20), rotation = 0} )
+ 		end
+	end--슬라이드는 누르고 있는 시간만큼 유지됨
+
+
+	Runtime:addEventListener( "key", onKeyJumpEvent )
+	Runtime:addEventListener( "key", onKeySlideEvent )
 end
 
 function scene:show( event )
