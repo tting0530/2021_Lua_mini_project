@@ -247,7 +247,7 @@ function scene:create( event )
 	local ground = display.newImageRect("img/Ground.png", 1280, 200)
 	ground.x, ground.y = display.contentWidth/2, display.contentHeight-50
 
-	---------장애물 생성-----------
+	---------장애물 생성------------
 
 	--일단 장애물 크기는 제가 임의로 해놓았습니다.
 	--리소스 완성되면 크기하고 좌표 수정하겠습니다.
