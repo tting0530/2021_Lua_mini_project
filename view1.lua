@@ -235,6 +235,80 @@ function scene:create( event )
     for i = 0, #bgmUI do sceneGroup:insert( bgmUI[i] ) end
     for i = 0, #playUI do sceneGroup:insert( playUI[i] ) end
     for i = 0, #UI do sceneGroup:insert( UI[i] ) end
+	
+	
+	--
+	physics.start()
+    	physics.setGravity( 0, 0 )
+
+	local sky = display.newImageRect("img/Sky.png", display.contentWidth, display.contentHeight)
+	sky.x, sky.y = display.contentWidth/2, display.contentHeight/2
+
+	local ground = display.newImageRect("img/Ground.png", 1280, 200)
+	ground.x, ground.y = display.contentWidth/2, display.contentHeight-50
+
+	---------장애물 생성------------
+
+	--일단 장애물 크기는 제가 임의로 해놓았습니다.
+	--리소스 완성되면 크기하고 좌표 수정하겠습니다.
+	--장애물 애니메이션의 경우 현 리소스(선인장 A,B,C같이 imagesheet 없고 단일이미지)로 어떻게 적용해야할지 잘 모르겠습니다....
+		-->혹시 최종 리소스에 애니메이션이 있는 장애물들이 나온다면 적용하겠습니다.
+
+	local obstacle = {}
+	--------땅 장애물
+	obstacle[1] = display.newImageRect("img/Cactus A.png", 50, 100)
+	obstacle[2] = display.newImageRect("img/Cactus B.png", 200, 100)
+	obstacle[3] = display.newImageRect("img/Cactus C.png", 200, 100)
+	obstacle[4] = display.newImageRect("img/Back A.png", 200, 100)
+	obstacle[5] = display.newImageRect("img/Back B.png", 100, 100)
+	---------하늘에서 날아오는 장애물, 마땅한게 없어 구름으로 대체합니다.
+	obstacle[6] = display.newImageRect("img/Cloud A.png", 200, 100)
+	obstacle[7] = display.newImageRect("img/Cloud B.png", 100, 50)
+	--[[or i = 1, 3, 1 do
+		obstacle[i].x, obstacle[i].y = display.contentWidth+200, display.contentHeight-250
+	end]]
+	for i = 1, 5, 1 do 
+		--화면 밖에 배치, 땅장애물 초기 위치
+		obstacle[i].x, obstacle[i].y = display.contentWidth+200, display.contentHeight-200
+	end
+	for i = 6, 7, 1 do 
+		--화면 밖에 배치, 하늘장애물 초기 위치
+		obstacle[i].x, obstacle[i].y = display.contentWidth+200, 250
+	end
+
+	local cooltime
+	local obs_idx
+
+	--------------------------------------------
+
+	function start()
+		cooltime = math.random(1, 4)--0.5~2초 사이의 간격으로 스폰
+		obs_idx = math.random(1, 7)--1~5번 장애물 중 랜덤선택
+		print("spawn time = "..cooltime)
+		print("obstacle idx is "..obs_idx)
+		timer.performWithDelay(cooltime*500, spawn_obstacle)
+	end
+
+	function obs_reset()--다시 화면 밖으로(초기상태로)
+		print("obstacle.x is out of screen")
+
+		obstacle[obs_idx]:setLinearVelocity( 0, 0 )
+		physics.removeBody(obstacle[obs_idx])
+		obstacle[obs_idx].x = display.contentWidth+200
+
+		start()
+	end
+
+	function spawn_obstacle ()
+		print("spawn obstacle")
+
+		physics.addBody( obstacle[obs_idx], "dynamic" )
+		obstacle[obs_idx]:setLinearVelocity( -500, 0 )--장애물 이동
+
+		timer.performWithDelay(4000, obs_reset)
+	end
+	
+	start()
 end
 
 function scene:show( event )
